@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap" rel="stylesheet">
+    <title>Packet Sniffer</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Packet Sniffer</h1>
+        <form id="start-sniffing-form">
+            <label for="interface">Interface:</label>
+            <input type="text" id="interface" name="interface" required>
+            <button type="submit">Start Sniffing</button>
+        </form>
+
+        <div class="packets">
+            <h2>Packets:</h2>
+            <ul id="packet-list">
+                {% for packet in packets %}
+                    <li>{{ packet }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="actions">
+            <button id="refresh-btn">Refresh</button>
+            <button id="download-btn"><a href="/download">Download</a></button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function refreshPackets() {
+            $.getJSON('/get_packets', function(data) {
+                var packetList = data.packets;
+                $('#packet-list').empty();
+                $.each(packetList, function(index, packet) {
+                    $('#packet-list').append('<li>' + packet + '</li>');
+                });
+            });
+        }
+
+        $(document).ready(function() {
+            // Start sniffing form submission
+            $('#start-sniffing-form').submit(function(e) {
+                e.preventDefault();
+                var interface = $('#interface').val();
+                $.post('/start_sniffing', { interface: interface }, function() {
+                    setInterval(refreshPackets, 5000);
+                });
+            });
+
+            // Refresh button click event
+            $('#refresh-btn').click(function() {
+                $.get('/refresh');
+            });
+        });
+    </script>
+</body>
+</html>
